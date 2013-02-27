@@ -13,9 +13,11 @@ You will need:
 * Play 2
 
 When you have gathered the required reagents, execute:
+
 	play -Dhttp.port=$port run
 
 Navigate to:
+
 	http://localhost:$port/
 
 Revel.
