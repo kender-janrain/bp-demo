@@ -8,8 +8,8 @@ communicate with one another via the Backplane protocol.
 You will need:
 * Redis, running on localhost:6379
 * Backplane, running on localhost:9000
-** A user with the credentials kender1:kender1
-** A bus named "test1" that has POST granted to kender1
+* A Backplane user with the credentials kender1:kender1
+* A Backplane bus named "test1" that has POST granted to kender1
 * Play 2
 
 When you have gathered the required reagents, run:
