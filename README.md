@@ -12,9 +12,10 @@ You will need:
 * A Backplane bus named "test1" that has POST granted to kender1
 * Play 2
 
-When you have gathered the required reagents, run:
-	play -Dhttp.port=<some port> run
+When you have gathered the required reagents, execute:
+	play -Dhttp.port=$port run
 
-Navigate to http://localhost:<some port>/
+Navigate to:
+	http://localhost:$port/
 
-Click buttons and enjoy.
+Revel.
