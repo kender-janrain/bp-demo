@@ -1,0 +1,10 @@
+@(authInfo: data.AuthInfo)
+
+@main("Kender's Test App") {
+    <div>
+        Hello @authInfo.profile.displayName
+    </div>
+    @w1(authInfo.profile.preferredUsername)
+    <hr/>
+    @w2()
+}
