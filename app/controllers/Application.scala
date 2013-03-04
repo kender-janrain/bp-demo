@@ -1,14 +1,12 @@
 package controllers
 
-import play.api.mvc._
-import play.api.libs.ws.WS
+import com.ning.http.client.Realm.AuthScheme
 import concurrent.ExecutionContext.Implicits.global
 import data.{AuthInfo, AuthInfoCache}
-import play.api.libs.json.{JsObject, JsArray, Json}
-import sun.security.krb5.Realm
-import com.ning.http.client.Realm.AuthScheme
 import play.Logger
-
+import play.api.libs.json.Json
+import play.api.libs.ws.WS
+import play.api.mvc._
 
 object Application extends Controller {
 
@@ -43,61 +41,39 @@ object Application extends Controller {
 		}
 	}
 
-	def w1 = Action { implicit request =>
+	def w1_post = Action { implicit request =>
 		Async {
-			val (channelId, messageType, payload) = request.body match {
-				case AnyContentAsFormUrlEncoded(form) => {
-					val channelId = form("channelId").head
-					val messageType = form("messageType").head
-					val payload = Json.obj(form
-						.filter(f => !Set("channelId", "messageType").contains(f._1))
-						.map(f => (f._1, Json.toJsFieldJsValueWrapper(f._2.mkString(","))))
-						.toSeq: _*)
-					(channelId, messageType, payload)
+			val (bus, channel, messageType, payload) = request.body match {
+				case AnyContentAsFormUrlEncoded(data) => {
+					def v(name: String) = data.get(name).map(_.head).getOrElse(sys.error("%s required".format(name)))
+					val fixedKeys = Set("bus", "channel", "type")
+					val payload = data.filter(f => !fixedKeys.contains(f._1)).map {
+						case (key, value) => key -> value.head
+					}.toMap
+					(v("bus"), v("channel"), v("type"), payload)
 				}
-				case _ => sys.error("unhandled input")
+				case _ => sys.error("form data required")
 			}
-			Logger.debug("w1 publishing to %s".format(channelId))
-			val data = Json.arr(
-				Json.obj(
-					"source" -> routes.Application.w1().absoluteURL(),
-					"type" -> messageType,
-					"sticky" -> false,
-					"payload" -> payload
-				)
-			)
-			WS.url(channelId).withAuth("kender1", "kender1", AuthScheme.BASIC).post(data).map { channelResponse =>
-				Ok("GRAND!")
-			}
+			for {
+				token <- BP2.accessToken
+				message <- BP2.postMessage(token, bus, channel, messageType, payload)
+			} yield Ok(message.toString)
 		}
 	}
 
-	def w2 = Action { implicit request =>
+	def w2_get = Action { implicit request =>
 		Async {
-			val (channelId, messageType, payload) = request.body match {
-				case AnyContentAsFormUrlEncoded(form) => {
-					val channelId = form("channelId").head
-					val messageType = form("messageType").head
-					val payload = Json.obj(form
-						.filter(f => !Set("channelId", "messageType").contains(f._1))
-						.map(f => (f._1, Json.toJsFieldJsValueWrapper(f._2.mkString(","))))
-						.toSeq: _*)
-					(channelId, messageType, payload)
+			val messageUrl = request.body match {
+				case AnyContentAsFormUrlEncoded(data) => {
+					data.get("messageUrl").map(_.head).getOrElse(sys.error("messageUrl required"))
 				}
-				case _ => sys.error("unhandled input")
+				case _ => sys.error("form data required")
 			}
-			Logger.debug("w2 publishing to %s".format(channelId))
-			val data = Json.arr(
-				Json.obj(
-					"source" -> routes.Application.w2().absoluteURL(),
-					"type" -> messageType,
-					"sticky" -> false,
-					"payload" -> payload
-				)
-			)
-			WS.url(channelId).withAuth("kender1", "kender1", AuthScheme.BASIC).post(data).map { channelResponse =>
-				Ok("JOLLY!")
-			}
+			for {
+				token <- BP2.accessToken
+				message <- BP2.getMessage(token, messageUrl)
+			} yield Ok(message.payload("text"))
 		}
+
 	}
 }

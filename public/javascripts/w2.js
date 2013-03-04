@@ -5,20 +5,25 @@
 			$.ajax({
 				url: "/w2", type: "POST", cache: false, data: {
 					"channelId": Backplane.getChannelID(),
-					"messageType": "w2.click",
-					"hello": "world"
+					"messageType": "urn:w2:click"
 				}
 			}).done(function() {
-					console.log("w2 published success", arguments);
-					Backplane.expectMessages("w2.click");
-				});
+				console.log("w2 published success", arguments);
+				Backplane.expectMessages("w2.click");
+			});
 		});
 
 		Backplane(function() {
 			Backplane.subscribe(function(msg) {
-				$("#w2-saw").append(
-					$("<pre></pre>").text(JSON.stringify(msg, null, "\t"))
-				);
+				$.ajax({
+					url: "/w2/msg", type: "POST", cache: false, data: {
+						messageUrl: msg["messageURL"]
+					}
+				}).done(function(data) {
+					$("#w2-saw").append(
+						$("<pre></pre>").text("Widget #1 said " + data)
+					);
+				});
 			});
 		});
 	});

@@ -8,8 +8,8 @@ var IndexPage = (function() {
 	});
 
 	Backplane.init({
-		serverBaseURL: "http://localhost:9000/v1",
-		busName: "test1"
+		serverBaseURL: "http://localhost:9000/v2",
+		busName: "b1"
 	});
 	return {};
 })();
